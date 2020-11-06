@@ -1,4 +1,6 @@
 .idea
+*.log
+out*.wav
 
 # Make this a symlink, or install somehow.
 /parallel_wavegan
