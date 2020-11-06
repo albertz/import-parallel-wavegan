@@ -12,23 +12,11 @@ Usage example::
 
 
 import argparse
-from num2words import num2words
 import numpy
 import torch
 import yaml
 import wave
 import better_exchook
-
-from parallel_wavegan import models as pwg_models
-from parallel_wavegan.layers import PQMF
-
-
-def number_convert(word):
-    try:
-        f = float(word)
-        return num2words(f)
-    except Exception:
-        return word
 
 
 def main():
@@ -37,6 +25,12 @@ def main():
     parser.add_argument("--pwg_config", type=str, help="ParallelWaveGAN config (.yaml)")
     parser.add_argument("--pwg_checkpoint", type=str, help="ParallelWaveGAN checkpoint (.pkl)")
     args = parser.parse_args()
+
+    from pytorch_to_returnn import trace_torch
+    trace_torch.enable()
+
+    from parallel_wavegan import models as pwg_models
+    from parallel_wavegan.layers import PQMF
 
     # Initialize PWG
     pwg_config = yaml.load(open(args.pwg_config), Loader=yaml.Loader)
