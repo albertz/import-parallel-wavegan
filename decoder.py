@@ -91,13 +91,15 @@ def main():
         p = subprocess.Popen(tokenizer, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         line = p.communicate(input=line.encode("UTF-8"))[0].decode("UTF-8").strip()
         p.terminate()
-        print(line)
+        print("Tokenized: %r" % line)
+        assert line
 
         # apply num2wordsn and pronunciation dict
-        words = list(map(number_convert, line.split(" ")))
-        print(words)
+        words = list(map(number_convert, line.split()))
+        print("Words:", words)
         phoneme_sequence = " _ ".join([" ".join(pronunciation_dictionary[w]) for w in words if w in pronunciation_dictionary.keys()])
         phoneme_sequence += " _ ~"
+        print("Phonemes:", phoneme_sequence)
 
         try:
             classes = numpy.asarray(returnn_vocab.get_seq(phoneme_sequence), dtype="int32")
