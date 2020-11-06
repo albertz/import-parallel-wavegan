@@ -47,6 +47,7 @@ def main():
     parser.add_argument("--pronunciation_lexicon", type=str, help="CMU style pronuncation lexicon")
     parser.add_argument("--pwg_config", type=str, help="ParallelWaveGAN config (.yaml)")
     parser.add_argument("--pwg_checkpoint", type=str, help="ParallelWaveGAN checkpoint (.pkl)")
+    parser.add_argument("--dump_features", help="npy file")
 
     args = parser.parse_args()
 
@@ -108,7 +109,10 @@ def main():
             raise e
 
         feature_data = numpy.squeeze(result['output']).T
-        print(feature_data.shape)
+        print("Feature shape:", feature_data.shape)
+        if args.dump_features:
+            print("Dump features to file:", args.dump_features)
+            numpy.save(args.dump_features, feature_data)
 
         with torch.no_grad():
             input_features = pwg_pad_fn(torch.from_numpy(feature_data).unsqueeze(0)).to(pyt_device)
