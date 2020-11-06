@@ -1,6 +1,6 @@
 
-https://github.com/kan-bayashi/ParallelWaveGAN
-
-/work/asr4/rossenbach/LJSpeech_interspeech_tutorial
-
-
+Use [PyTorch-to-RETURNN](https://github.com/albertz/pytorch-to-returnn)
+to convert/import [ParallelWaveGAN](https://github.com/kan-bayashi/ParallelWaveGAN)
+to [RETURNN](https://github.com/rwth-i6/returnn).
+[2020-TTS-LJSpeech](https://github.com/rwth-i6/returnn-experiments/tree/master/2020-TTS-LJSpeech)
+is used as the example.
