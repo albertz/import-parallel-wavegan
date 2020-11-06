@@ -40,8 +40,8 @@ def number_convert(word):
 
 
 def main():
-
     parser = argparse.ArgumentParser(description="TTS decoder running RETURNN TTS and an MB-MelGAN vocoder")
+    parser.add_argument("--input", help="use this input (otherwise stdin as default)")
     parser.add_argument("--returnn_config", type=str, help="RETURNN config file (.config)")
     parser.add_argument("--vocab_file", type=str, help="RETURNN vocab file (.pkl)")
     parser.add_argument("--pronunciation_lexicon", type=str, help="CMU style pronuncation lexicon")
@@ -79,14 +79,12 @@ def main():
         for lexicon_entry in lexicon.readlines():
             word, phonemes = lexicon_entry.strip().split(" ", maxsplit=1)
             pronunciation_dictionary[word] = phonemes.split(" ")
-    
-    # Tokenizer perl command
-    tokenizer = ["perl", "./scripts/tokenizer/tokenizer.perl", "-l", "en", "-no-escape"]
-    
-    audios = []
 
-    for line in sys.stdin.readlines():
+    def gen_audio(line: str) -> bytes:
         line = line.strip().lower()
+
+        # Tokenizer perl command
+        tokenizer = ["perl", "./scripts/tokenizer/tokenizer.perl", "-l", "en", "-no-escape"]
         # run perl tokenizer as external script
         p = subprocess.Popen(tokenizer, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         line = p.communicate(input=line.encode("UTF-8"))[0].decode("UTF-8").strip()
@@ -97,7 +95,8 @@ def main():
         # apply num2wordsn and pronunciation dict
         words = list(map(number_convert, line.split()))
         print("Words:", words)
-        phoneme_sequence = " _ ".join([" ".join(pronunciation_dictionary[w]) for w in words if w in pronunciation_dictionary.keys()])
+        phoneme_sequence = " _ ".join(
+            [" ".join(pronunciation_dictionary[w]) for w in words if w in pronunciation_dictionary.keys()])
         phoneme_sequence += " _ ~"
         print("Phonemes:", phoneme_sequence)
 
@@ -112,20 +111,32 @@ def main():
 
         feature_data = numpy.squeeze(result['output']).T
         print(feature_data.shape)
-        
+
         with torch.no_grad():
             input_features = pwg_pad_fn(torch.from_numpy(feature_data).unsqueeze(0)).to(pyt_device)
             audio_waveform = pwg_pqmf.synthesis(pwg_model(input_features)).view(-1).cpu().numpy()
 
-        audios.append(numpy.asarray(audio_waveform*(2**15-1), dtype="int16").tobytes())
+        return numpy.asarray(audio_waveform*(2**15-1), dtype="int16").tobytes()
+
+    audios = []
+    if args.input is not None:
+        audios.append(gen_audio(args.input))
+    else:
+        print("Reading from stdin.")
+        for line in sys.stdin.readlines():
+            if not line.strip():
+                continue
+            audios.append(gen_audio(line))
 
     for i, audio in enumerate(audios):
-        wave_writer = wave.open("out_%i.wav" % i, "wb")
+        out_fn = "out_%i.wav" % i
+        wave_writer = wave.open(out_fn, "wb")
         wave_writer.setnchannels(1)  
         wave_writer.setframerate(16000)
         wave_writer.setsampwidth(2)
         wave_writer.writeframes(audio)
         wave_writer.close()
+        print("Wrote %s." % out_fn)
 
 
 if __name__ == "__main__":
