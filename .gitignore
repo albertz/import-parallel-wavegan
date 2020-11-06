@@ -5,6 +5,7 @@ out*.wav
 # Make this a symlink, or install somehow.
 # If symlink, should be directly importable.
 /parallel_wavegan
+/pytorch_to_returnn
 /returnn
 
 /data
