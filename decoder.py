@@ -4,7 +4,7 @@
 Usage example::
 
   python3 decoder.py \
-  --returnn_config tacotron2_ljspeech.config \
+  --returnn_config tacotron2_ljspeech.config.py \
   --vocab_file data/cmu_vocab.pkl \
   --pronunciation_lexicon data/cmudict.dict \
   --pwg_config mb_melgan.v2.yaml \
