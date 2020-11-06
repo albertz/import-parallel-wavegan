@@ -7,13 +7,11 @@ import sys
 import torch
 import yaml
 import wave
-
-sys.path.append("returnn")
-sys.path.append("ParallelWaveGAN")
+import better_exchook
 
 from parallel_wavegan import models as pwg_models
 from parallel_wavegan.layers import PQMF
-from returnn import rnn
+from returnn import __main__ as rnn
 from returnn.datasets.generating import StaticDataset, Vocabulary
 
 
@@ -21,8 +19,9 @@ def number_convert(word):
     try:
         f = float(word)
         return num2words(f)
-    except:
+    except Exception:
         return word
+
 
 def main():
 
@@ -112,4 +111,5 @@ def main():
 
 
 if __name__ == "__main__":
+    better_exchook.install()
     main()
