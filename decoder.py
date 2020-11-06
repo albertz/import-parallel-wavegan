@@ -51,7 +51,7 @@ def main():
     args = parser.parse_args()
 
     # Initialize RETURNN
-    rnn.init(args.returnn_config)
+    rnn.init(args.returnn_config, config_updates={"train": None, "dev": None})
     # CPU decoding is currently not supported, this will follow in a later update
     #rnn.init(args.returnn_config, config_updates={'device': 'cpu'})
 
