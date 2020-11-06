@@ -1,22 +1,6 @@
 #!rnn.py
 
-from returnn.tf.layers.base import Loss
-import tensorflow as tf
-
-class MeanL1LossV2(Loss):
-  """
-  Like MSE loss, but with absolute difference
-  """
-  class_name = "mean_l1_v2"
-
-  def get_value(self):
-    """
-    :rtype: tf.Tensor
-    """
-    assert not self.target.sparse, "sparse target values are not yet supported"
-    with tf.name_scope("loss_mean_l1"):
-      return self.reduce_func(tf.reduce_mean(tf.abs(self.target_flat - self.output_flat), axis=1))
-
+config = globals()["config"]  # make IDEs happy
 
 # mode selection
 MODE = config.value("mode", "train")
@@ -189,7 +173,7 @@ network_template = {
             'output': { 'activation': None,
                         'class': 'linear',
                         'from': ['decoder_2', 'att0'],
-                        'loss': 'mean_l1_v2',
+                        'loss': 'mean_l1',
                         'loss_scale': 1.0,
                         'n_out': 160,
                         'target': 'windowed_data_target'},
@@ -367,10 +351,9 @@ def get_network(epoch, **kwargs):
 
     return network
 
-#custom tensorflow operations
-import tensorflow as tf
 
 def _stop_token_target(data, ramp_length=5):
+  import tensorflow as tf
   time_axis = data.get_dynamic_axes()[0]
   stop_position = tf.expand_dims(data.get_dynamic_size(time_axis), axis=1) - ramp_length - 1
   ramp = tf.expand_dims(tf.range(tf.shape(data.placeholder)[1]), axis=0)
