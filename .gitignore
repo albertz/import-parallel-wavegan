@@ -2,3 +2,6 @@
 
 # Make this a symlink, or install somehow.
 /parallel_wavegan
+
+/data
+/mb_melgan_models
