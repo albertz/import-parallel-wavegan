@@ -1,6 +1,7 @@
 .idea
 *.log
 out*.wav
+__pycache__
 
 # Make this a symlink, or install somehow.
 # If symlink, should be directly importable.
