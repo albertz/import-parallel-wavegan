@@ -17,6 +17,7 @@ import torch
 import yaml
 import wave
 import better_exchook
+import typing
 
 
 def main():
@@ -26,11 +27,19 @@ def main():
     parser.add_argument("--pwg_checkpoint", type=str, help="ParallelWaveGAN checkpoint (.pkl)")
     args = parser.parse_args()
 
-    from pytorch_to_returnn import trace_torch
-    trace_torch.enable()
+    # from pytorch_to_returnn import trace_torch
+    # trace_torch.enable()
 
-    from parallel_wavegan import models as pwg_models
-    from parallel_wavegan.layers import PQMF
+    import pytorch_to_returnn.wrapped_import
+    pytorch_to_returnn.wrapped_import.DEBUG = True
+    from pytorch_to_returnn.wrapped_import import wrapped_import
+    wrapped_import("parallel_wavegan")
+    pwg_models = wrapped_import("parallel_wavegan.models")
+    pwg_layers = wrapped_import("parallel_wavegan.layers")
+
+    if typing.TYPE_CHECKING:
+        from parallel_wavegan import models as pwg_models
+        from parallel_wavegan import layers as pwg_layers
 
     # Initialize PWG
     pwg_config = yaml.load(open(args.pwg_config), Loader=yaml.Loader)
@@ -42,7 +51,7 @@ def main():
     pwg_model = generator.eval().to(pyt_device)
     pwg_pad_fn = torch.nn.ReplicationPad1d(
         pwg_config["generator_params"].get("aux_context_window", 0))
-    pwg_pqmf = PQMF(pwg_config["generator_params"]["out_channels"]).to(pyt_device)
+    pwg_pqmf = pwg_layers.PQMF(pwg_config["generator_params"]["out_channels"]).to(pyt_device)
 
     feature_data = numpy.load(args.features)
     print("Feature shape:", feature_data.shape)
