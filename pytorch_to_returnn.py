@@ -31,7 +31,7 @@ def main():
     # trace_torch.enable()
 
     import pytorch_to_returnn.wrapped_import
-    pytorch_to_returnn.wrapped_import.DEBUG = True
+    pytorch_to_returnn.wrapped_import.LogVerbosity = 4
     from pytorch_to_returnn.wrapped_import import wrapped_import
     wrapped_import("parallel_wavegan")
     pwg_models = wrapped_import("parallel_wavegan.models")
