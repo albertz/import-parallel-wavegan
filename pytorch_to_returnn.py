@@ -32,34 +32,45 @@ def main():
 
     import pytorch_to_returnn.wrapped_import
     pytorch_to_returnn.wrapped_import.LogVerbosity = 4
+    from pytorch_to_returnn.verify import verify
     from pytorch_to_returnn.wrapped_import import wrapped_import
-    wrapped_import("parallel_wavegan")
-    pwg_models = wrapped_import("parallel_wavegan.models")
-    pwg_layers = wrapped_import("parallel_wavegan.layers")
 
-    if typing.TYPE_CHECKING:
-        from parallel_wavegan import models as pwg_models
-        from parallel_wavegan import layers as pwg_layers
+    def model_func(wrapped_import):
 
-    # Initialize PWG
-    pwg_config = yaml.load(open(args.pwg_config), Loader=yaml.Loader)
-    pyt_device = torch.device("cpu")
-    generator = pwg_models.MelGANGenerator(**pwg_config['generator_params'])
-    generator.load_state_dict(
-        torch.load(args.pwg_checkpoint, map_location="cpu")["model"]["generator"])
-    generator.remove_weight_norm()
-    pwg_model = generator.eval().to(pyt_device)
-    pwg_pad_fn = torch.nn.ReplicationPad1d(
-        pwg_config["generator_params"].get("aux_context_window", 0))
-    pwg_pqmf = pwg_layers.PQMF(pwg_config["generator_params"]["out_channels"]).to(pyt_device)
+        if typing.TYPE_CHECKING or not wrapped_import:
+            from parallel_wavegan import models as pwg_models
+            from parallel_wavegan import layers as pwg_layers
 
-    feature_data = numpy.load(args.features)
-    print("Feature shape:", feature_data.shape)
+        else:
+            wrapped_import("parallel_wavegan")
+            pwg_models = wrapped_import("parallel_wavegan.models")
+            pwg_layers = wrapped_import("parallel_wavegan.layers")
 
-    with torch.no_grad():
-        input_features = pwg_pad_fn(torch.from_numpy(feature_data).unsqueeze(0)).to(pyt_device)
-        audio_waveform = pwg_pqmf.synthesis(pwg_model(input_features)).view(-1).cpu().numpy()
+        # Initialize PWG
+        pwg_config = yaml.load(open(args.pwg_config), Loader=yaml.Loader)
+        pyt_device = torch.device("cpu")
+        generator = pwg_models.MelGANGenerator(**pwg_config['generator_params'])
+        generator.load_state_dict(
+            torch.load(args.pwg_checkpoint, map_location="cpu")["model"]["generator"])
+        generator.remove_weight_norm()
+        pwg_model = generator.eval().to(pyt_device)
+        pwg_pad_fn = torch.nn.ReplicationPad1d(
+            pwg_config["generator_params"].get("aux_context_window", 0))
+        pwg_pqmf = pwg_layers.PQMF(pwg_config["generator_params"]["out_channels"]).to(pyt_device)
 
+        feature_data = numpy.load(args.features)
+        print("Feature shape:", feature_data.shape)
+
+        with torch.no_grad():
+            input_features = pwg_pad_fn(torch.from_numpy(feature_data).unsqueeze(0)).to(pyt_device)
+            audio_waveform = pwg_pqmf.synthesis(pwg_model(input_features)).view(-1)
+
+        return audio_waveform
+
+    verify(model_func)
+
+    audio_waveform = model_func(wrapped_import)
+    audio_waveform = audio_waveform.cpu().numpy()
     audio_raw = numpy.asarray(audio_waveform*(2**15-1), dtype="int16").tobytes()
 
     out_fn = "out.wav"
