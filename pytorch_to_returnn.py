@@ -13,7 +13,6 @@ Usage example::
 
 import argparse
 import numpy
-import torch
 import yaml
 import wave
 import better_exchook
@@ -32,16 +31,18 @@ def main():
 
     import pytorch_to_returnn.wrapped_import
     pytorch_to_returnn.wrapped_import.LogVerbosity = 4
-    from pytorch_to_returnn.verify import verify
+    from pytorch_to_returnn.verify import verify_torch
     from pytorch_to_returnn.wrapped_import import wrapped_import
 
     def model_func(wrapped_import):
 
         if typing.TYPE_CHECKING or not wrapped_import:
+            import torch
             from parallel_wavegan import models as pwg_models
             from parallel_wavegan import layers as pwg_layers
 
         else:
+            torch = wrapped_import("torch")
             wrapped_import("parallel_wavegan")
             pwg_models = wrapped_import("parallel_wavegan.models")
             pwg_layers = wrapped_import("parallel_wavegan.layers")
@@ -67,7 +68,7 @@ def main():
 
         return audio_waveform
 
-    verify(model_func)
+    verify_torch(model_func)
 
     audio_waveform = model_func(wrapped_import)
     audio_waveform = audio_waveform.cpu().numpy()
