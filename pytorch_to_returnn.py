@@ -70,6 +70,11 @@ def main():
 
     verify_torch(model_func)
 
+    import pytorch_to_returnn._wrapped_mods.torch as torch_
+    x = torch_.zeros((1,))
+    x = x + 1
+    print(x)
+
     audio_waveform = model_func(wrapped_import)
     audio_waveform = audio_waveform.cpu().numpy()
     audio_raw = numpy.asarray(audio_waveform*(2**15-1), dtype="int16").tobytes()
