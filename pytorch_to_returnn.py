@@ -30,7 +30,7 @@ def main():
     # trace_torch.enable()
 
     import pytorch_to_returnn.wrapped_import
-    pytorch_to_returnn.wrapped_import.LogVerbosity = 4
+    pytorch_to_returnn.wrapped_import.log.Verbosity = 6
     from pytorch_to_returnn.verify import verify_torch
     from pytorch_to_returnn.wrapped_import import wrapped_import
 
@@ -68,16 +68,16 @@ def main():
 
         return audio_waveform
 
-    verify_torch(model_func)
+    # verify_torch(model_func)
+
+    audio_waveform = model_func(wrapped_import)
+    audio_waveform = audio_waveform.cpu().numpy()
+    audio_raw = numpy.asarray(audio_waveform*(2**15-1), dtype="int16").tobytes()
 
     import pytorch_to_returnn._wrapped_mods.torch as torch_
     x = torch_.zeros((1,))
     x = x + 1
     print(x)
-
-    audio_waveform = model_func(wrapped_import)
-    audio_waveform = audio_waveform.cpu().numpy()
-    audio_raw = numpy.asarray(audio_waveform*(2**15-1), dtype="int16").tobytes()
 
     out_fn = "out.wav"
     wave_writer = wave.open(out_fn, "wb")
