@@ -29,8 +29,8 @@ def main():
     # from pytorch_to_returnn import trace_torch
     # trace_torch.enable()
 
-    import pytorch_to_returnn.wrapped_import
-    pytorch_to_returnn.wrapped_import.log.Verbosity = 6
+    import pytorch_to_returnn.log
+    pytorch_to_returnn.log.Verbosity = 6
     from pytorch_to_returnn.verify import verify_torch
     from pytorch_to_returnn.wrapped_import import wrapped_import
 
