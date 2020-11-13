@@ -27,17 +27,7 @@ def main():
     parser.add_argument("--pwg_checkpoint", type=str, help="ParallelWaveGAN checkpoint (.pkl)")
     args = parser.parse_args()
 
-    # from pytorch_to_returnn import trace_torch
-    # trace_torch.enable()
-
-    import pytorch_to_returnn.log
-    pytorch_to_returnn.log.Verbosity = 6
-    from pytorch_to_returnn.verify import verify_torch
-    from pytorch_to_returnn.wrapped_import import wrapped_import
-
-    def model_func(wrapped_import, inputs):
-        feature_data = inputs  # type: torch.Tensor
-
+    def model_func(wrapped_import, inputs: torch.Tensor):
         if typing.TYPE_CHECKING or not wrapped_import:
             import torch
             from parallel_wavegan import models as pwg_models
@@ -61,16 +51,17 @@ def main():
         pwg_pqmf = pwg_layers.PQMF(pwg_config["generator_params"]["out_channels"]).to(pyt_device)
 
         with torch.no_grad():
-            audio_waveform = pwg_pqmf.synthesis(pwg_model(feature_data))
-
-        return audio_waveform
+            return pwg_pqmf.synthesis(pwg_model(inputs))
 
     feature_data = numpy.load(args.features)
     print("Feature shape:", feature_data.shape)
 
+    import pytorch_to_returnn.log
+    pytorch_to_returnn.log.Verbosity = 6
+    from pytorch_to_returnn.verify import verify_torch
     verify_torch(model_func, inputs=feature_data[None, :, :])
 
-    audio_waveform = model_func(wrapped_import, inputs=torch.from_numpy(feature_data[None, :, :]))
+    audio_waveform = model_func(None, inputs=torch.from_numpy(feature_data[None, :, :]))
     audio_waveform = audio_waveform.view(-1).cpu().numpy()
     audio_raw = numpy.asarray(audio_waveform*(2**15-1), dtype="int16").tobytes()
 
