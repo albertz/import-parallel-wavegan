@@ -60,6 +60,9 @@ def main():
     pytorch_to_returnn.log.Verbosity = 6
     from pytorch_to_returnn.verify import verify_torch
     verify_torch(model_func, inputs=feature_data[None, :, :])
+    # from pytorch_to_returnn.wrapped_import import wrapped_import_demo
+    # from pytorch_to_returnn import torch as torch_returnn
+    # model_func(wrapped_import_demo, inputs=torch_returnn.from_numpy(feature_data[None, :, :]))
 
     audio_waveform = model_func(None, inputs=torch.from_numpy(feature_data[None, :, :]))
     audio_waveform = audio_waveform.view(-1).cpu().numpy()
