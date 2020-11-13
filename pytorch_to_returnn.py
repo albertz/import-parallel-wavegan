@@ -12,6 +12,7 @@ Usage example::
 
 
 import argparse
+import torch
 import numpy
 import yaml
 import wave
@@ -34,7 +35,8 @@ def main():
     from pytorch_to_returnn.verify import verify_torch
     from pytorch_to_returnn.wrapped_import import wrapped_import
 
-    def model_func(wrapped_import):
+    def model_func(wrapped_import, inputs):
+        feature_data = inputs  # type: torch.Tensor
 
         if typing.TYPE_CHECKING or not wrapped_import:
             import torch
@@ -55,23 +57,21 @@ def main():
             torch.load(args.pwg_checkpoint, map_location="cpu")["model"]["generator"])
         generator.remove_weight_norm()
         pwg_model = generator.eval().to(pyt_device)
-        pwg_pad_fn = torch.nn.ReplicationPad1d(
-            pwg_config["generator_params"].get("aux_context_window", 0))
+        assert pwg_config["generator_params"].get("aux_context_window", 0) == 0  # not implemented otherwise
         pwg_pqmf = pwg_layers.PQMF(pwg_config["generator_params"]["out_channels"]).to(pyt_device)
 
-        feature_data = numpy.load(args.features)
-        print("Feature shape:", feature_data.shape)
-
         with torch.no_grad():
-            input_features = pwg_pad_fn(torch.from_numpy(feature_data).unsqueeze(0)).to(pyt_device)
-            audio_waveform = pwg_pqmf.synthesis(pwg_model(input_features)).view(-1)
+            audio_waveform = pwg_pqmf.synthesis(pwg_model(feature_data))
 
         return audio_waveform
 
-    verify_torch(model_func)
+    feature_data = numpy.load(args.features)
+    print("Feature shape:", feature_data.shape)
 
-    audio_waveform = model_func(wrapped_import)
-    audio_waveform = audio_waveform.cpu().numpy()
+    verify_torch(model_func, inputs=feature_data[None, :, :])
+
+    audio_waveform = model_func(wrapped_import, inputs=torch.from_numpy(feature_data[None, :, :]))
+    audio_waveform = audio_waveform.view(-1).cpu().numpy()
     audio_raw = numpy.asarray(audio_waveform*(2**15-1), dtype="int16").tobytes()
 
     out_fn = "out.wav"
