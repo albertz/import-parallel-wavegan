@@ -18,6 +18,7 @@ import yaml
 import wave
 import better_exchook
 import typing
+from returnn.tf.util.basic import debug_register_better_repr, setup_tf_thread_pools, print_available_devices
 
 
 def main():
@@ -26,6 +27,11 @@ def main():
     parser.add_argument("--pwg_config", type=str, help="ParallelWaveGAN config (.yaml)")
     parser.add_argument("--pwg_checkpoint", type=str, help="ParallelWaveGAN checkpoint (.pkl)")
     args = parser.parse_args()
+
+    better_exchook.install()
+    debug_register_better_repr()
+    setup_tf_thread_pools()
+    print_available_devices()
 
     def model_func(wrapped_import, inputs: torch.Tensor):
         if typing.TYPE_CHECKING or not wrapped_import:
@@ -79,5 +85,4 @@ def main():
 
 
 if __name__ == "__main__":
-    better_exchook.install()
     main()
