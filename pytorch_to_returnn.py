@@ -19,6 +19,7 @@ import wave
 import better_exchook
 import typing
 from returnn.tf.util.basic import debug_register_better_repr, setup_tf_thread_pools, print_available_devices
+from returnn.log import log
 
 
 def main():
@@ -30,6 +31,7 @@ def main():
 
     better_exchook.install()
     debug_register_better_repr()
+    log.initialize(verbosity=[5])
     setup_tf_thread_pools()
     print_available_devices()
 
@@ -64,8 +66,8 @@ def main():
 
     import pytorch_to_returnn.log
     pytorch_to_returnn.log.Verbosity = 6
-    from pytorch_to_returnn.verify import verify_torch
-    verify_torch(model_func, inputs=feature_data[None, :, :])
+    from pytorch_to_returnn.verify import verify_torch_and_convert_to_returnn
+    verify_torch_and_convert_to_returnn(model_func, inputs=feature_data[None, :, :])
     # from pytorch_to_returnn.wrapped_import import wrapped_import_demo
     # from pytorch_to_returnn import torch as torch_returnn
     # model_func(wrapped_import_demo, inputs=torch_returnn.from_numpy(feature_data[None, :, :]))
