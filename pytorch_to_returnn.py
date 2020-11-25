@@ -66,7 +66,7 @@ def main():
 
     import pytorch_to_returnn.log
     pytorch_to_returnn.log.Verbosity = 6
-    from pytorch_to_returnn.verify import verify_torch_and_convert_to_returnn
+    from pytorch_to_returnn.converter import verify_torch_and_convert_to_returnn
     verify_torch_and_convert_to_returnn(model_func, inputs=feature_data[None, :, :])
     # from pytorch_to_returnn.wrapped_import import wrapped_import_demo
     # from pytorch_to_returnn import torch as torch_returnn
